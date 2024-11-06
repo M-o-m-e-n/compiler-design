@@ -36,13 +36,22 @@ def lex(source_code):
             tokens.append((kind, value, line_number))
 
     return tokens
+    
+# Accept multiline input from the user
+# print("Enter the C code (type 'END' on a new line to finish):")
+# lines = []
+# while True:
+#     line = input()
+#     if line.strip().upper() == 'END':
+#         break
+#     lines.append(line)
 
 # Accept multiline input from the user
-print("Enter the C code (type 'END' on a new line to finish):")
+print("Enter the C code (press Enter on an empty line to finish):")
 lines = []
 while True:
     line = input()
-    if line.strip().upper() == 'END':
+    if line.strip() == '':  # Stop on empty line
         break
     lines.append(line)
 
