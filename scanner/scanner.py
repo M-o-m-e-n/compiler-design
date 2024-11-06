@@ -53,3 +53,6 @@ tokens = lex(source_code)
 
 for token in tokens:
     print(token)
+    
+# Wait before closing
+input("Press Enter to close...")
