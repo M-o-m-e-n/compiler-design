@@ -15,11 +15,13 @@ class Grammar:
     def is_simple(self):
         # Check if the grammar is simple (no left recursion, no ambiguity, no empty rules)
         for non_terminal, rules in self.rules.items():
+            # First, check for empty rules explicitly
+            if any(rule == "" for rule in rules):
+                self.simple = False
+                return False
+
             rule_starts = []  # Store the starting symbols of the rules for duplicate terminal check
             for rule in rules:
-                if rule == "":  # Check for empty rules
-                    self.simple = False
-                    return False
                 if rule[0] == non_terminal:  # Check for left recursion
                     self.simple = False
                     return False
@@ -35,8 +37,6 @@ class Grammar:
 
         self.simple = True
         return True
-
-
 class TopDownParser:
     def __init__(self, grammar):
         self.grammar = grammar
@@ -200,11 +200,11 @@ class GrammarParserGUI:
         self.results_text.delete(1.0, tk.END)
 
         # Display grammar simplicity
-        self.results_text.insert(tk.END, f"Grammar Simplicity: {'Simple' if is_simple else 'Not Simple'}\n")
-
         if is_simple:
+            self.results_text.insert(tk.END, "The Grammar is Simple!")
             messagebox.showinfo("Grammar", "The Grammar is Simple!")
         else:
+            self.results_text.insert(tk.END, "The Grammar is Not Simple!")
             messagebox.showwarning("Grammar", "The Grammar is Not Simple!")
 
     def check_string(self):
