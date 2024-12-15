@@ -11,6 +11,7 @@ class Grammar:
     def is_simple(self):
         # Check if the grammar is simple (no left recursion, no ambiguity, no empty rules)
         for non_terminal, rules in self.rules.items():
+            rule_starts = []  # Store the starting symbols of the rules for duplicate terminal check
             for rule in rules:
                 if rule == "":  # Check for empty rules
                     self.simple = False
@@ -18,6 +19,16 @@ class Grammar:
                 if rule[0] == non_terminal:  # Check for left recursion
                     self.simple = False
                     return False
+                if rule[0].isupper():  # Check if the rule starts with a non-terminal (left recursion check)
+                    self.simple = False
+                    return False
+
+                # Check for duplicate terminals in different rules of the same non-terminal
+                if rule[0] in rule_starts:
+                    self.simple = False
+                    return False
+                rule_starts.append(rule[0])
+
         self.simple = True
         return True
 
@@ -26,12 +37,12 @@ class TopDownParser:
     def __init__(self, grammar):
         self.grammar = grammar
         self.input_string = []
-        self.index = 0 # a pointer to the current index in the input string during parsing
+        self.index = 0  # a pointer to the current index in the input string during parsing
         self.parse_tree = None  # Root of the parse tree (Holds the structure of the parse tree)
 
     def parse(self, non_terminal):
         """ Attempt to parse the input starting from a non-terminal. """
-        if self.index >= len(self.input_string): # this means the entire string has been consumed
+        if self.index >= len(self.input_string):  # this means the entire string has been consumed
             # Return a node showing the partial progress
             return {"name": non_terminal, "children": []}
 
@@ -124,7 +135,7 @@ if __name__ == "__main__":
             if grammar.is_simple():
                 print("The Grammar is simple.")
             else:
-                print("The Grammar isn't simple. Please re-enter the grammar.")
+                print("The Grammar isn't simple.")
 
         elif choice == "2":
             if 'grammar' not in locals():
@@ -132,7 +143,7 @@ if __name__ == "__main__":
                 continue
 
             if not grammar.simple:
-                print("The grammar isn't simple. Please enter a valid grammar first.")
+                print("The grammar isn't simple.")
                 continue
 
             input_string = input("Enter the string to be checked: ")
