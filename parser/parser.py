@@ -1,3 +1,7 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+
 class Grammar:
     def __init__(self):
         self.rules = {}
@@ -11,11 +15,13 @@ class Grammar:
     def is_simple(self):
         # Check if the grammar is simple (no left recursion, no ambiguity, no empty rules)
         for non_terminal, rules in self.rules.items():
+            # First, check for empty rules explicitly
+            if any(rule == "" for rule in rules):
+                self.simple = False
+                return False
+
             rule_starts = []  # Store the starting symbols of the rules for duplicate terminal check
             for rule in rules:
-                if rule == "":  # Check for empty rules
-                    self.simple = False
-                    return False
                 if rule[0] == non_terminal:  # Check for left recursion
                     self.simple = False
                     return False
@@ -31,7 +37,6 @@ class Grammar:
 
         self.simple = True
         return True
-
 
 class TopDownParser:
     def __init__(self, grammar):
@@ -88,71 +93,166 @@ class TopDownParser:
         parse_result = self.parse(root_non_terminal)
 
         is_accepted = parse_result and self.index == len(self.input_string)
+        stack_after_checking = self.input_string[self.index:] if not is_accepted else []
 
-        # Display results
-        print(f"\nThe input string: {self.input_string}")  # Display input as a list of characters
+        return is_accepted, parse_result, stack_after_checking
+
+
+class GrammarParserGUI:
+    def __init__(self, master):
+        self.master = master
+        master.title("Top-Down Parser GUI")
+        master.geometry("800x600")
+
+        self.grammar = Grammar()
+        self.setup_ui()
+
+    def setup_ui(self):
+        # Grammar Rules Frame
+        rules_frame = ttk.LabelFrame(self.master, text="Grammar Rules")
+        rules_frame.pack(padx=10, pady=10, fill=tk.X)
+
+        # S Non-Terminal Rules
+        s_frame = ttk.Frame(rules_frame)
+        s_frame.pack(fill=tk.X, padx=5, pady=5)
+        ttk.Label(s_frame, text="Rules for 'S':").pack(side=tk.LEFT)
+
+        self.s_rules_entries = []
+        for i in range(2):
+            entry = ttk.Entry(s_frame, width=30)
+            entry.pack(side=tk.LEFT, padx=5)
+            self.s_rules_entries.append(entry)
+
+        # B Non-Terminal Rules
+        b_frame = ttk.Frame(rules_frame)
+        b_frame.pack(fill=tk.X, padx=5, pady=5)
+        ttk.Label(b_frame, text="Rules for 'B':").pack(side=tk.LEFT)
+
+        self.b_rules_entries = []
+        for i in range(2):
+            entry = ttk.Entry(b_frame, width=30)
+            entry.pack(side=tk.LEFT, padx=5)
+            self.b_rules_entries.append(entry)
+
+        # Add Grammar Button
+        add_grammar_btn = ttk.Button(rules_frame, text="Define Grammar", command=self.define_grammar)
+        add_grammar_btn.pack(padx=10, pady=10)
+
+        # String Check Frame
+        check_frame = ttk.LabelFrame(self.master, text="String Parsing")
+        check_frame.pack(padx=10, pady=10, fill=tk.X)
+
+        # Input String
+        input_frame = ttk.Frame(check_frame)
+        input_frame.pack(fill=tk.X, padx=5, pady=5)
+        ttk.Label(input_frame, text="Input String:").pack(side=tk.LEFT)
+        self.input_entry = ttk.Entry(input_frame, width=40)
+        self.input_entry.pack(side=tk.LEFT, padx=5)
+
+        # Check String Button
+        check_btn = ttk.Button(check_frame, text="Check String", command=self.check_string)
+        check_btn.pack(padx=10, pady=10)
+
+        # Results Frame
+        results_frame = ttk.LabelFrame(self.master, text="Results")
+        results_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        # Text Widget for Results
+        self.results_text = tk.Text(results_frame, wrap=tk.WORD, height=15)
+        self.results_text.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        # Scrollbar for Results
+        scrollbar = ttk.Scrollbar(results_frame, command=self.results_text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.results_text.configure(yscrollcommand=scrollbar.set)
+
+    def define_grammar(self):
+        # Reset the grammar
+        self.grammar = Grammar()
+
+        # Check if any rules are entered, treating blanks as empty strings
+        s_rules = [entry.get().strip() if entry.get().strip() else "" for entry in self.s_rules_entries]
+        b_rules = [entry.get().strip() if entry.get().strip() else "" for entry in self.b_rules_entries]
+
+        # Show error if no rules are entered at all
+        if not any(s_rules) and not any(b_rules):
+            # Clear previous results
+            self.results_text.delete(1.0, tk.END)
+            self.results_text.insert(tk.END, "Error: Enter a grammar to parse")
+            messagebox.showerror("Grammar Error", "Please enter at least one rule for either S or B non-terminals")
+            return
+
+        # Add S rules
+        for rule in s_rules:
+            self.grammar.add_rule("S", rule)
+
+        # Add B rules
+        for rule in b_rules:
+            self.grammar.add_rule("B", rule)
+
+        # Check if grammar is simple
+        is_simple = self.grammar.is_simple()
+
+        # Clear previous results
+        self.results_text.delete(1.0, tk.END)
+
+        # Display grammar simplicity
+        if is_simple:
+            self.results_text.insert(tk.END, "The Grammar is Simple!")
+            messagebox.showinfo("Grammar", "The Grammar is Simple!")
+        else:
+            self.results_text.insert(tk.END, "The Grammar is Not Simple!")
+            messagebox.showwarning("Grammar", "The Grammar is Not Simple!")
+
+    def check_string(self):
+        # Check if grammar is defined
+        if not hasattr(self, 'grammar') or not self.grammar.simple:
+            messagebox.showerror("Error", "Please define a simple grammar first!")
+            return
+
+        input_string = self.input_entry.get().strip()
+        if not input_string:
+            messagebox.showerror("Error", "Please enter a string to parse!")
+            return
+
+        # Perform parsing
+        parser = TopDownParser(self.grammar)
+        is_accepted, parse_result, stack_after_checking = parser.check_string(input_string)
+
+        # Clear previous results
+        self.results_text.delete(1.0, tk.END)
+
+        # Display parsing results
+        self.results_text.insert(tk.END, f"The input string: {list(input_string)}\n")
 
         if is_accepted:
-            print("\nParse Tree:")
-            self.display_tree([parse_result])  # Display the parse tree (only if accepted)
-            print("\nYour input string is Accepted.")
+            self.results_text.insert(tk.END, "Parse Tree:\n")
+            self.display_parse_tree(parse_result)
+            self.results_text.insert(tk.END, "\nYour input string is Accepted.")
         else:
-            print("\nYour input string is Rejected.")
+            self.results_text.insert(tk.END, "\nYour input string is Rejected.")
 
-        # Update stack after checking
-        self.stack_after_checking = self.input_string[self.index:]
-        print(f"\nThe stack after checking: {self.stack_after_checking}")
+        # Always display the stack after checking
+        self.results_text.insert(tk.END, f"\n\nThe stack after checking: {stack_after_checking}")
 
-    def display_tree(self, nodes, prefix="", is_last=True):
-        """ Recursively print the parse tree using lines and branches. """
-        for i, node in enumerate(nodes):
-            connector = "└── " if is_last and i == len(nodes) - 1 else "├── "
-            print(f"{prefix}{connector}{node['name']}")
-            if "children" in node and node["children"]:
-                extension = "    " if is_last else "│   "
-                self.display_tree(node["children"], prefix + extension, i == len(nodes) - 1)
+    # [Rest of the code remains the same]
+    def display_parse_tree(self, node, indent="", is_last=True):
+        # Use different connector for root vs. child nodes
+        connector = "└── " if indent == "" else ("└── " if is_last else "├── ")
+        self.results_text.insert(tk.END, f"{indent}{connector}{node['name']}\n")
+
+        if 'children' in node and node['children']:
+            for i, child in enumerate(node['children']):
+                is_last_child = (i == len(node['children']) - 1)
+                child_indent = indent + ("    " if is_last else "│   ")
+                self.display_parse_tree(child, child_indent, is_last_child)
+
+
+def main():
+    root = tk.Tk()
+    app = GrammarParserGUI(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
-    while True:
-        print("\n1. Enter Grammar\n2. Check String\n3. Exit")
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
-            grammar = Grammar()
-
-            # Always ask for 'S' and 'B' non-terminals
-            print("Enter rules for non-terminal 'S':")
-            for i in range(2):  # Always exactly 2 rules for 'S'
-                rule = input(f"Enter rule number {i + 1} for non-terminal 'S': ").strip()
-                grammar.add_rule("S", rule)
-
-            print("Enter rules for non-terminal 'B':")
-            for i in range(2):  # Always exactly 2 rules for 'B'
-                rule = input(f"Enter rule number {i + 1} for non-terminal 'B': ").strip()
-                grammar.add_rule("B", rule)
-
-            if grammar.is_simple():
-                print("The Grammar is simple.")
-            else:
-                print("The Grammar isn't simple.")
-
-        elif choice == "2":
-            if 'grammar' not in locals():
-                print("Please define a grammar first.")
-                continue
-
-            if not grammar.simple:
-                print("The grammar isn't simple.")
-                continue
-
-            input_string = input("Enter the string to be checked: ")
-            parser = TopDownParser(grammar)
-
-            parser.check_string(input_string)
-
-        elif choice == "3":
-            break
-
-        else:
-            print("Invalid choice. Please try again.")
+    main()
