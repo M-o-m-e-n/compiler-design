@@ -1,7 +1,3 @@
-# the missing parts :
-# 1\ the stack after checking when the string rejected
-# 2\ parse tree
-
 class Grammar:
     def __init__(self):
         self.rules = {}
@@ -30,50 +26,80 @@ class TopDownParser:
     def __init__(self, grammar):
         self.grammar = grammar
         self.input_string = []
-        self.index = 0
-        self.stack_after_checking = []
+        self.index = 0 # a pointer to the current index in the input string during parsing
+        self.parse_tree = None  # Root of the parse tree (Holds the structure of the parse tree)
 
     def parse(self, non_terminal):
-        if self.index >= len(self.input_string):
-            return False
+        """ Attempt to parse the input starting from a non-terminal. """
+        if self.index >= len(self.input_string): # this means the entire string has been consumed
+            # Return a node showing the partial progress
+            return {"name": non_terminal, "children": []}
+
+        last_valid_node = {"name": non_terminal, "children": []}  # Store the partial progress
 
         for rule in self.grammar.rules.get(non_terminal, []):
             saved_index = self.index
-            if self.match_rule(rule):
-                return True
+            node = {"name": non_terminal, "children": []}  # Node for the current rule
+
+            if self.match_rule(rule, node["children"]):
+                return node  # Parsing succeeded with this rule
+
+            # Backtrack and keep the most recent failed state
             self.index = saved_index
+            last_valid_node = node
 
-        return False
+        # Return the partial state of the parse tree on failure
+        return last_valid_node
 
-    def match_rule(self, rule):
+    def match_rule(self, rule, children):
+        """ Match a rule and build the tree recursively. """
         for symbol in rule:
             if symbol.isupper():  # Non-terminal
-                if not self.parse(symbol):
-                    return False
+                child_node = self.parse(symbol) # Recursively parse the non-terminal
+                if child_node:
+                    children.append(child_node) # Add the child node to the parent
+                else:
+                    return False  # Parsing failed
             else:  # Terminal
                 if self.index < len(self.input_string) and self.input_string[self.index] == symbol:
+                    children.append({"name": symbol, "children": []}) # Add the terminal to the tree
                     self.index += 1
                 else:
-                    return False
+                    return False  # Terminal mismatch
         return True
 
     def check_string(self, input_string):
         self.input_string = list(input_string)
         self.index = 0
-        is_accepted = self.parse(next(iter(self.grammar.rules))) and self.index == len(self.input_string)
+        self.parse_tree = []  # Reset parse tree
 
-        # Update stack after checking
-        if is_accepted:
-            self.stack_after_checking = []  # Accepted: stack is empty
-        else:
-            self.stack_after_checking = self.input_string[self.index:]  # Rejected: remaining part in stack
+        root_non_terminal = next(iter(self.grammar.rules))  # Start parsing from the first non-terminal in the grammar
+        parse_result = self.parse(root_non_terminal)
+
+        is_accepted = parse_result and self.index == len(self.input_string)
 
         # Display results
-        print(f"The input string: {self.input_string}")
-        print(f"The stack after checking: {self.stack_after_checking}")
-        print(f"The rest of unchecked string: {self.stack_after_checking}")
+        print(f"\nThe input string: {self.input_string}")  # Display input as a list of characters
+        print("\nParse Tree:")
+        self.display_tree([parse_result])  # Display the parse tree (partial or full)
 
-        return is_accepted
+        if is_accepted:
+            print("\nYour input string is Accepted.")
+        else:
+            print("\nYour input string is Rejected.")
+
+        # Update stack after checking
+        self.stack_after_checking = self.input_string[self.index:]
+        print(f"\nThe stack after checking: {self.stack_after_checking}")
+
+    def display_tree(self, nodes, prefix="", is_last=True):
+        """ Recursively print the parse tree using lines and branches. """
+        for i, node in enumerate(nodes):
+            connector = "└── " if is_last and i == len(nodes) - 1 else "├── "
+            print(f"{prefix}{connector}{node['name']}")
+            if "children" in node and node["children"]:
+                extension = "    " if is_last else "│   "
+                self.display_tree(node["children"], prefix + extension, i == len(nodes) - 1)
 
 
 if __name__ == "__main__":
@@ -111,10 +137,7 @@ if __name__ == "__main__":
             input_string = input("Enter the string to be checked: ")
             parser = TopDownParser(grammar)
 
-            if parser.check_string(input_string):
-                print("Your input string is Accepted.")
-            else:
-                print("Your input string is Rejected.")
+            parser.check_string(input_string)
 
         elif choice == "3":
             break
