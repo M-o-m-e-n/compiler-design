@@ -169,6 +169,18 @@ class GrammarParserGUI:
         # Reset the grammar
         self.grammar = Grammar()
 
+        # Check if any rules are entered
+        s_rules = [entry.get().strip() for entry in self.s_rules_entries if entry.get().strip()]
+        b_rules = [entry.get().strip() for entry in self.b_rules_entries if entry.get().strip()]
+
+        # Show error if no rules are entered
+        if not s_rules or not b_rules:
+            # Clear previous results
+            self.results_text.delete(1.0, tk.END)
+            self.results_text.insert(tk.END, "Error: Enter a grammar to parse")
+            messagebox.showerror("Grammar Error", "Please enter rules for both S and B non-terminals")
+            return
+
         # Add S rules
         for entry in self.s_rules_entries:
             rule = entry.get().strip()
@@ -194,8 +206,6 @@ class GrammarParserGUI:
             messagebox.showinfo("Grammar", "The Grammar is Simple!")
         else:
             messagebox.showwarning("Grammar", "The Grammar is Not Simple!")
-
-        # [Previous code remains the same, only the check_string method is updated]
 
     def check_string(self):
         # Check if grammar is defined
