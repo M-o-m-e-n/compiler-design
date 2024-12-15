@@ -13,11 +13,14 @@ class Grammar:
         self.rules[non_terminal].append(rule)
 
     def is_simple(self):
-        # Check if the grammar is simple (no left recursion, no ambiguity)
+        # Check if the grammar is simple (no left recursion, no ambiguity, no empty rules)
         for non_terminal, rules in self.rules.items():
             for rule in rules:
-                if rule[0] == non_terminal:
-                    self.simple = False  # Left recursion detected
+                if rule == "":  # Check for empty rules
+                    self.simple = False
+                    return False
+                if rule[0] == non_terminal:  # Check for left recursion
+                    self.simple = False
                     return False
         self.simple = True
         return True
