@@ -55,14 +55,14 @@ class TopDownParser:
         """ Match a rule and build the tree recursively. """
         for symbol in rule:
             if symbol.isupper():  # Non-terminal
-                child_node = self.parse(symbol) # Recursively parse the non-terminal
+                child_node = self.parse(symbol)  # Recursively parse the non-terminal
                 if child_node:
-                    children.append(child_node) # Add the child node to the parent
+                    children.append(child_node)  # Add the child node to the parent
                 else:
                     return False  # Parsing failed
             else:  # Terminal
                 if self.index < len(self.input_string) and self.input_string[self.index] == symbol:
-                    children.append({"name": symbol, "children": []}) # Add the terminal to the tree
+                    children.append({"name": symbol, "children": []})  # Add the terminal to the tree
                     self.index += 1
                 else:
                     return False  # Terminal mismatch
@@ -109,16 +109,17 @@ if __name__ == "__main__":
 
         if choice == "1":
             grammar = Grammar()
-            print("The grammar must have exactly 2 non-terminals, each with exactly 2 rules.")
 
-            for _ in range(2):  # Limit to exactly 2 non-terminals
-                non_terminal = input("Enter non-terminal: ")
-                grammar.rules[non_terminal] = []  # Ensure no extra rules are added
+            # Always ask for 'S' and 'B' non-terminals
+            print("Enter rules for non-terminal 'S':")
+            for i in range(2):  # Always exactly 2 rules for 'S'
+                rule = input(f"Enter rule number {i + 1} for non-terminal 'S': ").strip()
+                grammar.add_rule("S", rule)
 
-                print(f"Enter 2 rules for the non-terminal '{non_terminal}':")
-                for i in range(2):  # Limit to exactly 2 rules per non-terminal
-                    rule = input(f"Rule {i + 1}: ").strip()
-                    grammar.add_rule(non_terminal, rule)
+            print("Enter rules for non-terminal 'B':")
+            for i in range(2):  # Always exactly 2 rules for 'B'
+                rule = input(f"Enter rule number {i + 1} for non-terminal 'B': ").strip()
+                grammar.add_rule("B", rule)
 
             if grammar.is_simple():
                 print("The Grammar is simple.")
