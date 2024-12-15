@@ -91,10 +91,10 @@ class TopDownParser:
 
         # Display results
         print(f"\nThe input string: {self.input_string}")  # Display input as a list of characters
-        print("\nParse Tree:")
-        self.display_tree([parse_result])  # Display the parse tree (partial or full)
 
         if is_accepted:
+            print("\nParse Tree:")
+            self.display_tree([parse_result])  # Display the parse tree (only if accepted)
             print("\nYour input string is Accepted.")
         else:
             print("\nYour input string is Rejected.")
