@@ -145,6 +145,7 @@ class GrammarParserGUI:
         # Input String
         input_frame = ttk.Frame(check_frame)
         input_frame.pack(fill=tk.X, padx=5, pady=5)
+        
         ttk.Label(input_frame, text="Input String:").pack(side=tk.LEFT)
         self.input_entry = ttk.Entry(input_frame, width=40)
         self.input_entry.pack(side=tk.LEFT, padx=5)

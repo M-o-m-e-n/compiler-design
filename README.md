@@ -103,7 +103,7 @@ Checks if the given string can be derived from the grammar and displays the pars
 - **Parameters:**
   - `input_string` (str): The string to be parsed.
 - **Outputs:**
-  - Prints the parse tree and whether the string is accepted or rejected.
+- Prints the parse tree and whether the string is accepted or rejected.
 
 #### `display_tree(self, nodes, prefix="", is_last=True)`
 

@@ -2,7 +2,7 @@ import re
 
 # Token specification
 token_specification = [
-    ('comment', r'//.*'),  # Single-line comments
+    ('comment', r'//.*'),  
     ('multiline_comment', r'/\*[\s\S]*?\*/'),  # Multi-line comments
     ('keyword', r'\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|string|class|struct|include)\b'),  # C keywords
     ('identifier', r'[A-Za-z_][A-Za-z0-9_]*'),  # Identifiers
